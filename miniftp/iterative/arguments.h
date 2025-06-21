@@ -1,8 +1,14 @@
 #pragma once
 
 #include "config.h"
-#include <netinet/in.h>  // for INET_ADDRSTRLEN
-
+#include <string.h>
+#include <argp.h>
+#include <unistd.h>  // for geteuid()
+#include <ifaddrs.h>
+#include <netinet/in.h> // for INET_ADDRSTRLEN
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <errno.h>      // perror()
 
 // Arguments struct to hold parsed options
 struct arguments {

@@ -1,13 +1,5 @@
-#include "config.h"
 #include "arguments.h"
-#include <string.h>
-#include <argp.h>
-#include <unistd.h>  // for geteuid()
-#include <ifaddrs.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <errno.h>      // perror()
+
 
 static struct argp_option options[] = {
   { "port",    'p', "PORT", 0, PORT_DOC, 0 },

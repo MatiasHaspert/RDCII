@@ -7,7 +7,7 @@ static struct argp_option options[] = {
   { 0 }
 };
 
-// --- CLI options ---
+// --- opciones CLI ---
 const char *argp_program_version = "server " VERSION;
 const char *argp_program_bug_address = BUG_EMAIL;
 static char doc[] = "Simple FTP server";
@@ -38,7 +38,7 @@ static int is_valid_local_ip(const char *ip_str) {
   return found;
 }
 
-// --- Argument parser ---
+// --- Parser de argumentos ---
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   struct arguments *args = state->input;
 
@@ -61,7 +61,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         args->address[INET_ADDRSTRLEN - 1] = '\0';
         args->address_set = 1;
       } else {
-        argp_usage(state); // Too many args
+        argp_usage(state); // demasiados argumentos
       }
       break;
     case ARGP_KEY_END:
@@ -83,12 +83,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   return 0;
 }
 
-// --- Argp parser definition ---
+// --- Definicion parser Argp ---
 static struct argp argp = { options, parse_opt, args_doc, doc, NULL, NULL, NULL };
 
-// Call this from main:
+// Funcion llamada desde el main
 int parse_arguments(int argc, char **argv, struct arguments *args) {
-  // Initialize defaults:
+  // Inicializar defaults:
   args->port = FTP_PORT;
   args->port_set = 0;
   strncpy(args->address, LOCALHOST, INET_ADDRSTRLEN);

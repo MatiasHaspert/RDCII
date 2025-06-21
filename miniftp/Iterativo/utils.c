@@ -1,17 +1,11 @@
 #define _POSIX_C_SOURCE 200809L
-#include "server.h"
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
+#include "utils.h"
+
 
 void close_fd(int fd, const char *label) {
 
   if (close(fd) < 0) {
-    fprintf(stderr, "Error closing %s: ", label);
+    fprintf(stderr, "Error al cerrar %s: ", label);
     perror(NULL);
   }
 }

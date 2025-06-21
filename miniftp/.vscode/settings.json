@@ -1,5 +1,11 @@
 {
     "files.associations": {
-        "string.h": "c"
+        "string.h": "c",
+        "serverdtp.h": "c",
+        "serverpi.h": "c",
+        "responses.h": "c",
+        "stddef.h": "c",
+        "unistd.h": "c",
+        "signal.h": "c"
     }
 }

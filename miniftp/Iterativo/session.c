@@ -1,9 +1,7 @@
-// session.c
 #include "session.h"
-#include <string.h>
-#include <unistd.h>
 
-// Initialize pointer to NULL before session start
+
+// Inicializar el puntero a NULL antes del inicio de la sesión
 ftp_session_t *current_sess = NULL;
 
 static ftp_session_t sess = {

@@ -1,8 +1,6 @@
 #define _GNU_SOURCE
-#include "dtp.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "serverdtp.h"
+
 
 int check_credentials(char *user, char *pass) {
   FILE *file;
@@ -10,10 +8,10 @@ int check_credentials(char *user, char *pass) {
   size_t len = 0;
   int found = -1;
 
-  // make the credential string
+  // crear la cadena de credenciales
   sprintf(cred, "%s:%s", user, pass);
 
-  // check if it is present in any ftpusers line
+  // comprobar si está presente en alguna línea ftpusers
   file = fopen(path, "r");
   if (file == NULL) {
     fprintf(stderr, "Error: no se pudo abrir el archivo de usuarios.\n");

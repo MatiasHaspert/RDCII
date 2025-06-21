@@ -1,14 +1,4 @@
-#include "server.h"
-#include "pi.h"
-#include "responses.h"
-#include "utils.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <errno.h>
-#include <strings.h>
+#include "serverpi.h"
 
 static ftp_command_t ftp_commands[] = {
   { "USER", handle_USER },
@@ -25,7 +15,7 @@ static ftp_command_t ftp_commands[] = {
 
 int welcome(ftp_session_t *sess) {
 
-  // Send initial FTP welcome message
+  // Enviar mensaje inicial FTP de bienvenida
   if (safe_dprintf(sess->control_sock, MSG_220) != sizeof(MSG_220) - 1) {
     fprintf(stderr, "Send error\n");
     close_fd(sess->control_sock, "cliente socket");
@@ -38,7 +28,7 @@ int welcome(ftp_session_t *sess) {
 int getexe_command(ftp_session_t *sess) {
   char buffer[BUFFER_SIZE];
 
-  // Receive string from CC
+  // Recibir String desde CC
   ssize_t len = recv(sess->control_sock, buffer, sizeof(buffer) - 1, 0);
   if (len < 0) {
     perror("Receive fail: ");
@@ -46,10 +36,10 @@ int getexe_command(ftp_session_t *sess) {
     return -1;
   }
 
-  // The connection was closed improperly and we close it
+  //La conexión se cerró incorrectamente y la cerramos.
   if (len == 0) {
-    sess->current_user[0] = '\0'; // Close session
-    close_fd(sess->control_sock, "client socket"); // Close socket
+    sess->current_user[0] = '\0'; // Cerrar session
+    close_fd(sess->control_sock, "client socket"); // Cerrar socket
     sess->control_sock = -1;
     return -1;
   }
@@ -62,11 +52,11 @@ int getexe_command(ftp_session_t *sess) {
   char *lf = strchr(buffer, '\n');
   if (lf) *lf = '\0';
 
-  // Separate command and argument
+  // Separar comando y argumento
   char *arg = NULL;
   char *cmd = buffer;
 
-  // Case null command
+  // Caso comando null
   if (cmd[0] == '\0') {
     safe_dprintf(sess->control_sock, "500 Empty command.\r\n");
     return 0;

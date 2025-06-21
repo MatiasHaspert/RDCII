@@ -2,6 +2,16 @@
 
 #include <stddef.h>
 #include "session.h"
+#include "responses.h"
+#include "server.h"
+#include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <errno.h>
+#include <strings.h>
 
 int welcome(ftp_session_t *sess);
 int getexe_command(ftp_session_t *sess);

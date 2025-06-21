@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #define PWDFILE "/etc/ausftp/ftpusers"
 
 int check_credentials(char *user, char *pass);

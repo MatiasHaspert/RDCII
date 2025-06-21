@@ -4,13 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
+#include <sys/socket.h>  
+#include <netinet/in.h> 
+#include <arpa/inet.h>
 #include <unistd.h>
 
 #include "serverdtp.h"
+#include "serverpi.h"
 
-#define BUFSIZE 512
 #define MAXPENDING 5
+#define PORTDEFAULT 21
 
 #endif

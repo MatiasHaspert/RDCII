@@ -67,8 +67,9 @@ int getexe_command(ftp_session_t *sess) {
     *space = '\0';
     arg = space + 1;
     while (*arg == ' ') arg++;
-  }
 
+  }
+  
   ftp_command_t *entry = ftp_commands;
   while (entry->name) {
     if (strcasecmp(entry->name, cmd) == 0) {

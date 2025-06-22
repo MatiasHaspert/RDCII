@@ -66,7 +66,19 @@ void handle_TYPE(const char *args) {
   (void)args;
   (void)sess;
 
-  // Placeholder
+  if (!args || strlen(args) != 1) {
+    safe_dprintf(sess->control_sock, MSG_501);
+    return;
+  }
+
+  if (args[0] == 'I') {
+    safe_dprintf(sess->control_sock, MSG_204); // Modo binario
+  } else if(args[0] == 'A'){
+    safe_dprintf(sess->control_sock, MSG_205); // Modo ASCII
+  } else {
+    safe_dprintf(sess->control_sock, MSG_504); // Comando no implementado para ese parámetro
+  }
+
 }
 
 void handle_PORT(const char *args) {
@@ -74,7 +86,30 @@ void handle_PORT(const char *args) {
   (void)args;
   (void)sess;
 
-  // Placeholder
+  if (!args || strlen(args) == 0) {
+    safe_dprintf(sess->control_sock, MSG_501);
+    return;
+  }
+
+  int h1, h2, h3, h4, p1, p2;
+  if (sscanf(args, "%d,%d,%d,%d,%d,%d", &h1, &h2, &h3, &h4, &p1, &p2) != 6) {
+    safe_dprintf(sess->control_sock, MSG_501);
+    return;
+  }
+
+  // Limpiar y configurar dirección IP y puerto para la conexión de datos
+  memset(&sess->data_addr, 0, sizeof(sess->data_addr));
+  sess->data_addr.sin_family = AF_INET;
+  sess->data_addr.sin_port = htons(p1 * 256 + p2);
+
+  char ip_str[INET_ADDRSTRLEN];
+  snprintf(ip_str, sizeof(ip_str), "%d.%d.%d.%d", h1, h2, h3, h4);
+  if (inet_pton(AF_INET, ip_str, &sess->data_addr.sin_addr) <= 0) {
+    safe_dprintf(sess->control_sock, MSG_501);
+    return;
+  }
+
+  safe_dprintf(sess->control_sock, MSG_203); // Comando PORT OK
 }
 
 void handle_RETR(const char *args) {
@@ -82,7 +117,24 @@ void handle_RETR(const char *args) {
   (void)args;
   (void)sess;
 
-  // Placeholder
+  if (!sess->logged_in) {
+    safe_dprintf(sess->control_sock, MSG_530);
+    return;
+  }
+
+  if (!args || strlen(args) == 0) {
+    safe_dprintf(sess->control_sock, MSG_501);
+    return;
+  }
+
+  safe_dprintf(sess->control_sock, MSG_150); // OK, abriendo conexión de datos
+
+  // Intentar enviar el archivo
+  if (dtp_send_file(sess, args) == 0) {
+    safe_dprintf(sess->control_sock, MSG_226); // Transferencia OK
+  } else {
+    safe_dprintf(sess->control_sock, MSG_550, "No se pudo enviar el archivo");
+  }
 }
 
 void handle_STOR(const char *args) {
@@ -90,7 +142,23 @@ void handle_STOR(const char *args) {
   (void)args;
   (void)sess;
 
-  // Placeholder
+  if (!sess->logged_in) {
+    safe_dprintf(sess->control_sock, MSG_530);
+    return;
+  }
+
+  if (!args || strlen(args) == 0) {
+    safe_dprintf(sess->control_sock, MSG_501);
+    return;
+  }
+
+  safe_dprintf(sess->control_sock, MSG_150); // OK, listo para recibir
+ 
+  if (dtp_receive_file(sess, args) == 0) {
+    safe_dprintf(sess->control_sock, MSG_226); // Transferencia OK
+  } else {
+    safe_dprintf(sess->control_sock, MSG_550, "No se pudo guardar el archivo");
+  }
 }
 
 void handle_NOOP(const char *args) {
@@ -98,5 +166,5 @@ void handle_NOOP(const char *args) {
   (void)args;
   (void)sess;
 
-  // Placeholder
+  safe_dprintf(sess->control_sock, MSG_200); // OK
 }

@@ -10,3 +10,4 @@
 int check_credentials(char *user, char *pass);
 int dtp_send_file(ftp_session_t *sess, const char *filename);
 int dtp_receive_file(ftp_session_t *sess, const char *filename);
+int dtp_open_data_connection(ftp_session_t *sess);

@@ -108,7 +108,7 @@ void handle_PORT(const char *args) {
     safe_dprintf(sess->control_sock, MSG_501);
     return;
   }
-
+  sess->data_addr_set = 1; // Direccion de datos configurada
   safe_dprintf(sess->control_sock, MSG_203); // Comando PORT OK
 }
 
@@ -122,12 +122,21 @@ void handle_RETR(const char *args) {
     return;
   }
 
+  if (!sess->data_addr_set) {
+    safe_dprintf(sess->control_sock, MSG_503); // Comando mal secuenciado: falta PORT
+    return;
+  }
+
   if (!args || strlen(args) == 0) {
     safe_dprintf(sess->control_sock, MSG_501);
     return;
   }
 
-  safe_dprintf(sess->control_sock, MSG_150); // OK, abriendo conexión de datos
+  if (dtp_open_data_connection(sess) < 0) {
+    safe_dprintf(sess->control_sock, MSG_425, "No se pudo abrir el canal de datos");
+    return;
+  }
+
 
   // Intentar enviar el archivo
   if (dtp_send_file(sess, args) == 0) {
@@ -135,6 +144,11 @@ void handle_RETR(const char *args) {
   } else {
     safe_dprintf(sess->control_sock, MSG_550, "No se pudo enviar el archivo");
   }
+
+  close_fd(sess->data_sock, "data socket");
+  sess->data_sock = -1;
+  // Forzar reenvío de PORT para la próxima transferencia
+  sess->data_addr_set = 0;
 }
 
 void handle_STOR(const char *args) {
@@ -152,13 +166,26 @@ void handle_STOR(const char *args) {
     return;
   }
 
-  safe_dprintf(sess->control_sock, MSG_150); // OK, listo para recibir
+  if (!sess->data_addr_set) {
+    safe_dprintf(sess->control_sock, MSG_503); // Comando mal secuenciado: falta PORT
+    return;
+  }
+
+  if (dtp_open_data_connection(sess) < 0) {
+    safe_dprintf(sess->control_sock, MSG_425, "No se pudo abrir el canal de datos");
+    return;
+  }
  
   if (dtp_receive_file(sess, args) == 0) {
     safe_dprintf(sess->control_sock, MSG_226); // Transferencia OK
   } else {
     safe_dprintf(sess->control_sock, MSG_550, "No se pudo guardar el archivo");
   }
+
+  close_fd(sess->data_sock, "data socket");
+  sess->data_sock = -1;
+  // Forzar reenvío de PORT para la próxima transferencia
+  sess->data_addr_set = 0;
 }
 
 void handle_NOOP(const char *args) {

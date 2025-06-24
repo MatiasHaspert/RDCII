@@ -30,24 +30,11 @@ int check_credentials(char *user, char *pass) {
   return found;
 }
 
+
 int dtp_send_file(ftp_session_t *sess, const char *filename) {
   FILE *fp = fopen(filename, "rb");
   if (!fp) {
     perror("fopen");
-    return -1;
-  }
-
-  int data_sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (data_sock < 0) {
-    perror("socket");
-    fclose(fp);
-    return -1;
-  }
-
-  if (connect(data_sock, (struct sockaddr *)&sess->data_addr, sizeof(sess->data_addr)) < 0) {
-    perror("connect");
-    close(data_sock);
-    fclose(fp);
     return -1;
   }
 
@@ -56,15 +43,13 @@ int dtp_send_file(ftp_session_t *sess, const char *filename) {
   ssize_t bytes_written;
 
   while ((bytes_read = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
-    bytes_written = write(data_sock, buffer, bytes_read);
+    bytes_written = write(sess->data_sock, buffer, bytes_read);
     if (bytes_written < 0) {
       perror("write");
-      close(data_sock);
       fclose(fp);
       return -1;
     } else if ((size_t)bytes_written != bytes_read) {
       fprintf(stderr, "Error: no se escribieron todos los bytes\n");
-      close(data_sock);
       fclose(fp);
       return -1;
     }
@@ -72,16 +57,13 @@ int dtp_send_file(ftp_session_t *sess, const char *filename) {
 
   if (ferror(fp)) {
     fprintf(stderr, "Error al leer el archivo\n");
-    close(data_sock);
     fclose(fp);
     return -1;
   }
 
-  close(data_sock);
   fclose(fp);
   return 0;
 }
-
 
 int dtp_receive_file(ftp_session_t *sess, const char *filename) {
   FILE *fp = fopen(filename, "wb");
@@ -90,28 +72,12 @@ int dtp_receive_file(ftp_session_t *sess, const char *filename) {
     return -1;
   }
 
-  int data_sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (data_sock < 0) {
-    perror("socket");
-    fclose(fp);
-    return -1;
-  }
-
-  if (connect(data_sock, (struct sockaddr *)&sess->data_addr, sizeof(sess->data_addr)) < 0) {
-    perror("connect");
-    
-    close(data_sock);
-    fclose(fp);
-    return -1;
-  }
-  
   char buffer[1024];
   ssize_t bytes;
-  while ((bytes = read(data_sock, buffer, sizeof(buffer))) > 0) {
+  while ((bytes = read(sess->data_sock, buffer, sizeof(buffer))) > 0) {
     if (fwrite(buffer, 1, bytes, fp) != (size_t)bytes) {
       perror("fwrite");
       fclose(fp);
-      close(data_sock);
       return -1;
     }
   }
@@ -119,14 +85,11 @@ int dtp_receive_file(ftp_session_t *sess, const char *filename) {
   if (bytes < 0) {
     perror("read");
     fclose(fp);
-    close(data_sock);
     return -1;
   }
 
   fclose(fp);
-  close(data_sock);
 
-  // Verificar si el archivo quedó con error
   if (ferror(fp)) {
     fprintf(stderr, "Error en el archivo luego del cierre.\n");
     return -1;
@@ -135,3 +98,19 @@ int dtp_receive_file(ftp_session_t *sess, const char *filename) {
   return 0;
 }
 
+int dtp_open_data_connection(ftp_session_t *sess) {
+  sess->data_sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (sess->data_sock < 0) {
+    perror("socket");
+    return -1;
+  }
+
+  if (connect(sess->data_sock, (struct sockaddr *)&sess->data_addr, sizeof(sess->data_addr)) < 0) {
+    perror("connect");
+    close(sess->data_sock);
+    sess->data_sock = -1;
+    return -1;
+  }
+
+  return 0;
+}

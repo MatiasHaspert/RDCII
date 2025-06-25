@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>     // EXIT_*
 #include <string.h>
-#include <unistd.h>     // for close()
-#include <arpa/inet.h>  // for inet_ntoa()
+#include <unistd.h>     // close()
+#include <arpa/inet.h>  // inet_ntoa()
 #include <errno.h>
 #include <signal.h>
 
@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
   if (parse_arguments(argc, argv, &args) != 0)
     return EXIT_FAILURE;
 
-  printf("Starting server on %s:%d\n", args.address, args.port);
+  printf("Servidor levantado en %s:%d\n", args.address, args.port);
 
   int listen_fd = server_init(args.address, args.port);
   if (listen_fd < 0)
@@ -36,43 +36,41 @@ int main(int argc, char **argv) {
     pid_t pid = fork();
     if (pid < 0) {
       perror("fork");
-      close_fd(new_socket, "client (fork failed)");
+      close_fd(new_socket, "cliente (falló fork)");
       continue;
     }
 
     if (pid == 0) {
-      // Child process
+      // Proceso hijo
 
-      // Join parent's PGID
-      pid_t pgid = getpgrp();  // parent's PGID
+      // Unirse al PGID del padre
+      pid_t pgid = getpgrp();  // PGID del padre
       if (setpgid(0, pgid) < 0) {
-        perror("setpgid child");
+        perror("setpgid hijo");
       }
-      printf("Child PID %d PGID %d\n", getpid(), getpgrp());
+      printf("Hijo PID %d PGID %d\n", getpid(), getpgrp());
 
       setup_child_signals();
 
-      close(listen_fd); // Don't need the listener
+      close(listen_fd); // No necesita el socket de escucha
 
       char client_ip[INET_ADDRSTRLEN];
       inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
-      printf("[+] New connection from %s:%d handled by child PID %d\n", client_ip, ntohs(client_addr.sin_port), getpid());
+      printf("[+] Nueva conexión desde %s:%d atendida por el hijo PID %d\n", client_ip, ntohs(client_addr.sin_port), getpid());
 
-      server_loop(new_socket); // Each child sets its own session
+      server_loop(new_socket); // Cada hijo configura su propia sesión
 
-      printf("[-] Child PID %d closing connection for %s:%d\n", getpid(), client_ip, ntohs(client_addr.sin_port));
+      printf("[-] Hijo PID %d cerrando conexión de %s:%d\n", getpid(), client_ip, ntohs(client_addr.sin_port));
 
-      // https://en.cppreference.com/w/c/program/EXIT_status
       exit(EXIT_SUCCESS);
     } else {
-      // Parent process
-      close_fd(new_socket,"client socket");  // important to avoid socket leaks
+      // Proceso padre
+      close_fd(new_socket, "socket de cliente");  // importante para evitar fugas de sockets
     }
   }
 
-  // NEVER GO HERE
-  close_fd(listen_fd, "listening socket");
+  // NUNCA SE LLEGA AQUÍ
+  close_fd(listen_fd, "socket de escucha");
 
-  // https://en.cppreference.com/w/c/program/EXIT_status
   return EXIT_SUCCESS;
 }

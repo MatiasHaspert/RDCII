@@ -39,5 +39,9 @@ int main(int argc, char **argv)
     printf("Conexion desde %s:%d cerrada\n", client_ip, ntohs(client_addr.sin_port));
   }
 
+  // NUNCA SE LLEGA AQUÍ
+  close_fd(server_socket, "socket maestro");
+
+  // https://en.cppreference.com/w/c/program/EXIT_status
   return EXIT_SUCCESS;
 }

@@ -146,7 +146,7 @@ void handle_RETR(const char *args) {
   }
 
   close_fd(sess->data_sock, "data socket");
-  sess->data_sock = -1;
+  sess->data_sock = -1; 
   // Forzar reenvío de PORT para la próxima transferencia
   sess->data_addr_set = 0;
 }
@@ -171,11 +171,14 @@ void handle_STOR(const char *args) {
     return;
   }
 
+    
   if (dtp_open_data_connection(sess) < 0) {
     safe_dprintf(sess->control_sock, MSG_425, "No se pudo abrir el canal de datos");
     return;
   }
- 
+  
+  safe_dprintf(sess->control_sock, MSG_150);
+  
   if (dtp_receive_file(sess, args) == 0) {
     safe_dprintf(sess->control_sock, MSG_226); // Transferencia OK
   } else {

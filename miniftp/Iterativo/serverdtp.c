@@ -88,13 +88,13 @@ int dtp_receive_file(ftp_session_t *sess, const char *filename) {
     return -1;
   }
 
-  fclose(fp);
 
   if (ferror(fp)) {
     fprintf(stderr, "Error en el archivo luego del cierre.\n");
     return -1;
   }
 
+  fclose(fp);
   return 0;
 }
 
